@@ -76,6 +76,15 @@ cd gi-disease-classification-cnn
 python -m venv venv
 venv\Scripts\activate   # Windows
 
+## 🧠 Trained Model
+
+The trained GI disease classification CNN model is included in this repository using **Git LFS (Git Large File Storage)**.
+
+### 📁 Model File
+
+```text
+model/final_gi_model.h5
+
 ### 3️⃣ Install Dependencies
 pip install -r requirements.txt
 ▶️ Run the Application
