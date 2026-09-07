@@ -82,7 +82,6 @@ The trained GI disease classification CNN model is included in this repository u
 
 ### 📁 Model File
 
-```text
 model/final_gi_model.h5
 
 ### 3️⃣ Install Dependencies
