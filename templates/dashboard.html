@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% set nav_active = 'dashboard' %}
+{% block title %}Dashboard · GI Vision AI{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+        {% for category, message in messages %}
+        <div class="flash flash--{{ category }}"><i class="fa-solid fa-circle-info"></i><span>{{ message }}</span></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow"><span></span> Your clinical workspace</p>
+        <h1>Welcome back, {{ session.get('username', 'Clinician') }}.</h1>
+        <p>Review your analysis activity and reopen saved findings whenever you need them.</p>
+    </div>
+    <a class="button" href="{{ url_for('upload_file') }}"><i class="fa-solid fa-plus"></i> Analyze new image</a>
+</div>
+
+<section class="stat-grid" aria-label="Analysis summary">
+    <article class="stat-card"><span class="stat-card__icon"><i class="fa-regular fa-images"></i></span><span><strong class="stat-card__value">{{ total_predictions or 0 }}</strong><small class="stat-card__label">Total analyses</small></span></article>
+    <article class="stat-card"><span class="stat-card__icon"><i class="fa-solid fa-circle-check"></i></span><span><strong class="stat-card__value">{{ valid_predictions or 0 }}</strong><small class="stat-card__label">Valid images</small></span></article>
+    <article class="stat-card"><span class="stat-card__icon"><i class="fa-solid fa-triangle-exclamation"></i></span><span><strong class="stat-card__value">{{ (total_predictions or 0) - (valid_predictions or 0) }}</strong><small class="stat-card__label">Needs review</small></span></article>
+</section>
+
+<section class="panel panel--flush">
+    <div class="panel__head">
+        <div class="section-heading" style="margin: 0;">
+            <div><h2>Recent analyses</h2><p>Your ten most recent image classifications.</p></div>
+        </div>
+        <span class="icon-box"><i class="fa-regular fa-clock"></i></span>
+    </div>
+    <div class="panel__body">
+        {% if predictions %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>Image</th><th>Classification</th><th>Confidence</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for pred in predictions %}
+                    <tr>
+                        <td class="cell-muted">{{ pred['created_at'][:16] }}</td>
+                        <td><span class="file-name" title="{{ pred['filename'] }}">{{ pred['filename'] }}</span></td>
+                        <td class="cell-main">{{ pred['prediction'].replace('-', ' ').title() }}</td>
+                        <td>
+                            {% if pred['is_valid_image'] == 1 %}
+                            <div class="confidence"><span class="confidence__track"><span class="confidence__bar" style="width: {{ "%.4f"|format(pred['confidence'] * 100) }}%;"></span></span><small>{{ "%.4f"|format(pred['confidence'] * 100) }}%</small></div>
+                            {% else %}<span class="cell-muted">Not available</span>{% endif %}
+                        </td>
+                        <td>{% if pred['is_valid_image'] == 1 %}<span class="badge badge--valid"><i class="fa-solid fa-check"></i> Valid</span>{% else %}<span class="badge badge--invalid"><i class="fa-solid fa-xmark"></i> Invalid</span>{% endif %}</td>
+                        <td>{% if pred['is_valid_image'] == 1 %}<a class="button--secondary button--small" href="{{ url_for('analysis_details', analysis_id=pred['id']) }}"><i class="fa-solid fa-file-medical"></i> Details</a>{% else %}<span class="cell-muted">—</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><span class="empty-state__icon"><i class="fa-regular fa-folder-open"></i></span><h3>No analysis history yet</h3><p>Your completed image classifications will appear here for quick review.</p><a class="button" href="{{ url_for('upload_file') }}"><i class="fa-solid fa-cloud-arrow-up"></i> Analyze an image</a></div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>{% block title %}GI Vision AI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="auth-shell">
+    <main class="auth-layout">
+        <section class="auth-aside" aria-label="GI Vision AI introduction">
+            <a class="brand brand--light" href="{{ url_for('login') }}">
+                <span class="brand__mark"><i class="fa-solid fa-wave-square"></i></span>
+                <span><strong>GI Vision</strong><small>Clinical AI workspace</small></span>
+            </a>
+            <div class="auth-aside__copy">
+                <p class="eyebrow eyebrow--light"><span></span> Clinical decision support</p>
+                <h1>Clearer insights for every endoscopy image.</h1>
+                <p>Secure image analysis, organized findings, and practical follow-up guidance in one focused workspace.</p>
+            </div>
+            <div class="auth-aside__features">
+                <div><i class="fa-solid fa-shield-heart"></i><span><strong>Private by design</strong><small>Account-based image history</small></span></div>
+                <div><i class="fa-solid fa-chart-line"></i><span><strong>Explainable results</strong><small>Class probabilities and guidance</small></span></div>
+            </div>
+            <p class="auth-aside__foot"><i class="fa-solid fa-lock"></i> For trained medical professionals</p>
+        </section>
+
+        <section class="auth-main">
+            <div class="auth-card">
+                {% block auth_content %}{% endblock %}
+            </div>
+        </section>
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

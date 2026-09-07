@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set nav_active = 'admin' %}
+{% block title %}Administrator profile · GI Vision AI{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow"><span></span> Account preferences</p>
+        <h1>Administrator profile</h1>
+        <p>Keep administrator contact details and access credentials up to date.</p>
+    </div>
+    <a class="button--quiet" href="{{ url_for('admin_panel') }}"><i class="fa-solid fa-arrow-left"></i> Back to users</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+        {% for category, message in messages %}
+        <div class="flash flash--{{ category }}"><i class="fa-solid fa-circle-info"></i><span>{{ message }}</span></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<section class="panel" style="max-width: 850px;">
+    <div class="panel__head">
+        <div class="section-heading" style="margin: 0;"><div><h2>Profile details</h2><p>These details are only available to administrators.</p></div></div>
+        <span class="icon-box"><i class="fa-solid fa-user-gear"></i></span>
+    </div>
+    <div class="panel__body">
+        <form method="POST">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="username"><i class="fa-solid fa-at"></i> Username</label>
+                    <input id="username" value="{{ admin['username'] }}" disabled>
+                    <small class="field-hint">Usernames are managed separately.</small>
+                </div>
+                <div class="field">
+                    <label for="full_name"><i class="fa-solid fa-user"></i> Full name</label>
+                    <input id="full_name" name="full_name" type="text" value="{{ admin['full_name'] or '' }}" maxlength="100" autocomplete="name" placeholder="Dr. Firstname Lastname">
+                </div>
+                <div class="field">
+                    <label for="email"><i class="fa-solid fa-envelope"></i> Email address</label>
+                    <input id="email" name="email" type="email" value="{{ admin['email'] }}" autocomplete="email" required>
+                </div>
+                <div class="field">
+                    <label for="mobile"><i class="fa-solid fa-mobile-screen-button"></i> Mobile number</label>
+                    <input id="mobile" name="mobile" type="tel" value="{{ admin['mobile'] or '' }}" maxlength="25" autocomplete="tel" placeholder="+91 98765 43210">
+                </div>
+            </div>
+
+            <div class="form-divider"></div>
+            <div class="section-heading"><div><h2>Change password</h2><p>Leave these fields blank to keep your current password.</p></div></div>
+            <div class="form-grid form-grid--three">
+                <div class="field">
+                    <label for="current_password"><i class="fa-solid fa-lock"></i> Current password</label>
+                    <div class="password-wrap"><input id="current_password" name="current_password" type="password" autocomplete="current-password"><button class="password-toggle" data-toggle-password="current_password" type="button" aria-label="Show current password"><i class="fa-regular fa-eye"></i></button></div>
+                </div>
+                <div class="field">
+                    <label for="new_password"><i class="fa-solid fa-key"></i> New password</label>
+                    <div class="password-wrap"><input id="new_password" name="new_password" type="password" minlength="6" autocomplete="new-password"><button class="password-toggle" data-toggle-password="new_password" type="button" aria-label="Show new password"><i class="fa-regular fa-eye"></i></button></div>
+                </div>
+                <div class="field">
+                    <label for="confirm_password"><i class="fa-solid fa-key"></i> Confirm new password</label>
+                    <div class="password-wrap"><input id="confirm_password" name="confirm_password" type="password" minlength="6" autocomplete="new-password"><button class="password-toggle" data-toggle-password="confirm_password" type="button" aria-label="Show confirm password"><i class="fa-regular fa-eye"></i></button></div>
+                </div>
+            </div>
+            <div class="form-actions"><span class="field-hint"><i class="fa-solid fa-shield-heart"></i> Password changes require your current password.</span><button class="button" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save profile</button></div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = document.getElementById(button.dataset.togglePassword);
+            const reveal = input.type === 'password';
+            input.type = reveal ? 'text' : 'password';
+            button.querySelector('i').className = reveal ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "auth_base.html" %}
+{% block title %}Page not found · GI Vision AI{% endblock %}
+{% block auth_content %}
+<div class="error-card">
+    <span class="error-card__icon"><i class="fa-solid fa-compass"></i></span>
+    <p class="error-card__code">404</p>
+    <h1>Page not found</h1>
+    <p>The page you requested is unavailable or may have moved.</p>
+    <a class="button" href="{{ url_for('login') }}"><i class="fa-solid fa-arrow-left"></i> Return to sign in</a>
+</div>
+{% endblock %}

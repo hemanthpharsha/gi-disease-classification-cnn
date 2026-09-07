@@ -1,0 +1,98 @@
+{% extends "auth_base.html" %}
+{% block title %}Create account · GI Vision AI{% endblock %}
+{% block auth_content %}
+<div class="auth-card__icon"><i class="fa-solid fa-user-plus"></i></div>
+<p class="eyebrow"><span></span> Create your workspace</p>
+<h1>Start with GI Vision</h1>
+<p class="auth-card__intro">Create a secure account to manage endoscopy image analyses and reports.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+        {% for category, message in messages %}
+        <div class="flash flash--{{ category }}"><i class="fa-solid fa-circle-info"></i><span>{{ message }}</span></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<form class="auth-form" method="POST" id="register-form">
+    <div class="field">
+        <label for="username"><i class="fa-solid fa-user"></i> Username</label>
+        <input id="username" name="username" type="text" placeholder="Choose a username" minlength="3" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+        <label for="email"><i class="fa-solid fa-envelope"></i> Email address</label>
+        <input id="email" name="email" type="email" placeholder="you@hospital.com" autocomplete="email" required>
+    </div>
+    <div class="field">
+        <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+        <div class="password-wrap">
+            <input id="password" name="password" type="password" placeholder="At least 6 characters" minlength="6" autocomplete="new-password" required>
+            <button class="password-toggle" type="button" data-toggle-password="password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+        </div>
+        <div class="strength-meter" aria-hidden="true"><span id="strength-meter"></span></div>
+        <small class="field-status" id="password-status">Use at least 6 characters. A longer mixed password is stronger.</small>
+    </div>
+    <div class="field">
+        <label for="confirmPassword"><i class="fa-solid fa-lock"></i> Confirm password</label>
+        <div class="password-wrap">
+            <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Repeat your password" minlength="6" autocomplete="new-password" required>
+            <button class="password-toggle" type="button" data-toggle-password="confirmPassword" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+        </div>
+        <small class="field-status" id="match-status"></small>
+    </div>
+    <label class="checkbox-field"><input id="terms" type="checkbox" required><span>I confirm I am authorized medical personnel and agree to use this application responsibly.</span></label>
+    <button class="button auth-submit" type="submit" id="register-submit"><i class="fa-solid fa-user-plus"></i> Create secure account</button>
+</form>
+
+<div class="auth-divider"><span>Already have an account?</span></div>
+<p class="auth-footer"><a href="{{ url_for('login') }}"><i class="fa-solid fa-arrow-left"></i> Return to sign in</a></p>
+{% endblock %}
+{% block scripts %}
+<script>
+    const password = document.getElementById('password');
+    const confirmation = document.getElementById('confirmPassword');
+    const meter = document.getElementById('strength-meter');
+    const passwordStatus = document.getElementById('password-status');
+    const matchStatus = document.getElementById('match-status');
+    const form = document.getElementById('register-form');
+
+    document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = document.getElementById(button.dataset.togglePassword);
+            const reveal = input.type === 'password';
+            input.type = reveal ? 'text' : 'password';
+            button.querySelector('i').className = reveal ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+        });
+    });
+
+    function updatePasswordFeedback() {
+        const value = password.value;
+        let score = 0;
+        if (value.length >= 6) score++;
+        if (value.length >= 10) score++;
+        if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+        if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+        const colors = ['#d1435b', '#d1435b', '#d18b25', '#0f766e', '#16825d'];
+        meter.style.width = `${score * 25}%`;
+        meter.style.background = colors[score];
+        passwordStatus.textContent = value.length === 0 ? 'Use at least 6 characters. A longer mixed password is stronger.' : `${['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'][score]} password`;
+        if (confirmation.value) updateMatch();
+    }
+    function updateMatch() {
+        if (!confirmation.value) { matchStatus.textContent = ''; return; }
+        const matches = password.value === confirmation.value;
+        matchStatus.textContent = matches ? 'Passwords match.' : 'Passwords do not match.';
+        matchStatus.style.color = matches ? '#16825d' : '#d1435b';
+    }
+    password.addEventListener('input', updatePasswordFeedback);
+    confirmation.addEventListener('input', updateMatch);
+    form.addEventListener('submit', (event) => {
+        if (password.value !== confirmation.value) { event.preventDefault(); updateMatch(); return; }
+        const submit = document.getElementById('register-submit');
+        submit.disabled = true;
+        submit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
+    });
+</script>
+{% endblock %}

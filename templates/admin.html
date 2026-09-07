@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% set nav_active = 'admin' %}
+{% block title %}Administration · GI Vision AI{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow"><span></span> System administration</p>
+        <h1>User management</h1>
+        <p>Search accounts, review individual analysis histories, and manage access.</p>
+    </div>
+    <a class="button--secondary" href="{{ url_for('admin_profile') }}"><i class="fa-solid fa-user-gear"></i> Administrator profile</a>
+</div>
+
+<section class="panel panel--flush">
+    <div class="panel__head">
+        <div class="section-heading" style="margin: 0;"><div><h2>Registered users</h2><p>Select a name to view that user’s saved predictions.</p></div></div>
+        <span class="icon-box"><i class="fa-solid fa-users"></i></span>
+    </div>
+    <div class="panel__body">
+        <form class="search-row" method="GET" action="{{ url_for('admin_panel') }}">
+            <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input class="search-input" id="user-search" name="search" type="search" value="{{ search_query }}" placeholder="Enter exact username or email"></div>
+            <button class="button" type="submit"><i class="fa-solid fa-search"></i> Search</button>
+            {% if search_query %}<a class="button--quiet" href="{{ url_for('admin_panel') }}">Clear</a>{% endif %}
+        </form>
+        {% if search_query %}<p class="cell-muted" style="margin: -5px 0 15px;">Exact search results for <strong>{{ search_query }}</strong></p>{% endif %}
+
+        {% if users %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Last login</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td class="cell-muted">{{ user['id'] }}</td>
+                        <td><a class="table-user-link" href="{{ url_for('admin_user_predictions', user_id=user['id']) }}" title="View {{ user['username'] }}'s prediction history">{{ user['username'] }}<i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                        <td class="cell-muted">{{ user['email'] }}</td>
+                        <td>{% if user['role'] == 'admin' %}<span class="badge badge--admin"><i class="fa-solid fa-shield-halved"></i> Admin</span>{% else %}<span class="badge badge--user"><i class="fa-solid fa-user"></i> User</span>{% endif %}</td>
+                        <td class="cell-muted">{{ user['created_at'][:16] }}</td>
+                        <td class="cell-muted">{{ user['last_login'][:16] if user['last_login'] else 'Never' }}</td>
+                        <td>{% if user['role'] != 'admin' %}<button class="button--danger button--small delete-user" type="button" data-user-id="{{ user['id'] }}" data-username="{{ user['username'] }}"><i class="fa-solid fa-user-xmark"></i> Delete</button>{% else %}<span class="cell-muted">Protected</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><span class="empty-state__icon"><i class="fa-solid fa-user-slash"></i></span><h3>No matching users</h3><p>Try an exact username or email address.</p></div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.querySelectorAll('.delete-user').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const { userId, username } = button.dataset;
+            if (!window.confirm(`Delete ${username} and all saved analyses? This cannot be undone.`)) return;
+            try {
+                const response = await fetch(`/admin/users/${userId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Unable to delete the user.');
+                window.location.reload();
+            } catch (error) { window.alert(error.message); }
+        });
+    });
+</script>
+{% endblock %}

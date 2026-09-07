@@ -1,0 +1,55 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign in · GI Vision AI{% endblock %}
+{% block auth_content %}
+<div class="auth-card__icon"><i class="fa-solid fa-stethoscope"></i></div>
+<p class="eyebrow"><span></span> Secure access</p>
+<h1>Welcome back</h1>
+<p class="auth-card__intro">Sign in to review your saved analyses and continue working with GI Vision.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+        {% for category, message in messages %}
+        <div class="flash flash--{{ category }}"><i class="fa-solid fa-circle-info"></i><span>{{ message }}</span></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<form class="auth-form" method="POST" action="{{ url_for('login') }}" id="login-form">
+    <div class="field">
+        <label for="username"><i class="fa-solid fa-user"></i> Username or email</label>
+        <input id="username" name="username" type="text" placeholder="you@hospital.com" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+        <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+        <div class="password-wrap">
+            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <button class="password-toggle" type="button" data-toggle-password="password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+        </div>
+    </div>
+    <button class="button auth-submit" type="submit" id="login-submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in securely</button>
+</form>
+
+<div class="auth-divider"><span>New to GI Vision?</span></div>
+<p class="auth-footer">Create an account to keep your analysis history organized.<br><a href="{{ url_for('register') }}">Create an account <i class="fa-solid fa-arrow-right"></i></a></p>
+<div class="auth-note"><i class="fa-solid fa-shield-heart"></i><span>Use of this system is restricted to authorized medical personnel. Keep your login credentials private.</span></div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = document.getElementById(button.dataset.togglePassword);
+            const reveal = input.type === 'password';
+            input.type = reveal ? 'text' : 'password';
+            button.querySelector('i').className = reveal ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+            button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+        });
+    });
+    document.getElementById('login-form').addEventListener('submit', () => {
+        const submit = document.getElementById('login-submit');
+        submit.disabled = true;
+        submit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+    });
+</script>
+{% endblock %}

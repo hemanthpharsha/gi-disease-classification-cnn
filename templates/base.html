@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>{% block title %}GI Vision AI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="app-shell">
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="brand" href="{{ url_for('upload_file') }}" aria-label="GI Vision AI home">
+                <span class="brand__mark"><i class="fa-solid fa-wave-square"></i></span>
+                <span>
+                    <strong>GI Vision</strong>
+                    <small>Clinical AI workspace</small>
+                </span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+                <span class="sr-only">Toggle navigation</span>
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation">
+                <a class="nav-link {% if nav_active == 'upload' %}is-active{% endif %}" href="{{ url_for('upload_file') }}">
+                    <i class="fa-solid fa-sparkles"></i><span>Analyze</span>
+                </a>
+                <a class="nav-link {% if nav_active == 'dashboard' %}is-active{% endif %}" href="{{ url_for('dashboard') }}">
+                    <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a class="nav-link {% if nav_active == 'admin' %}is-active{% endif %}" href="{{ url_for('admin_panel') }}">
+                    <i class="fa-solid fa-shield-halved"></i><span>Admin</span>
+                </a>
+                {% endif %}
+            </nav>
+
+            <div class="header-actions">
+                <div class="user-chip" title="Signed in as {{ session.get('username', 'User') }}">
+                    <span class="user-chip__avatar">{{ session.get('username', 'U')[0]|upper }}</span>
+                    <span class="user-chip__text">
+                        <small>Signed in</small>
+                        <strong>{{ session.get('username', 'User') }}</strong>
+                    </span>
+                </div>
+                {% if session.get('role') == 'admin' %}
+                <a class="icon-button" href="{{ url_for('admin_profile') }}" title="Administrator profile" aria-label="Administrator profile">
+                    <i class="fa-solid fa-gear"></i>
+                </a>
+                {% endif %}
+                <a class="logout-button" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        const navToggle = document.querySelector('.nav-toggle');
+        const primaryNav = document.querySelector('.primary-nav');
+        if (navToggle && primaryNav) {
+            navToggle.addEventListener('click', () => {
+                const open = primaryNav.classList.toggle('is-open');
+                navToggle.setAttribute('aria-expanded', String(open));
+            });
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

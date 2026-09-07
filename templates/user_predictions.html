@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% set nav_active = 'admin' %}
+{% block title %}{{ selected_user['username'] }} history · GI Vision AI{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow"><span></span> User record</p>
+        <h1>{{ selected_user['username'] }}’s analysis history</h1>
+        <p>Administrator view of saved clinical image classifications.</p>
+    </div>
+    <a class="button--quiet" href="{{ url_for('admin_panel') }}"><i class="fa-solid fa-arrow-left"></i> All users</a>
+</div>
+
+<section class="user-summary" aria-label="Selected user details">
+    <div><small>Username</small><strong><i class="fa-solid fa-user"></i> {{ selected_user['username'] }}</strong></div>
+    <div><small>Email address</small><strong><i class="fa-solid fa-envelope"></i> {{ selected_user['email'] }}</strong></div>
+    <div><small>Saved scans</small><strong><i class="fa-regular fa-images"></i> {{ predictions|length }}</strong></div>
+</section>
+
+<section class="panel panel--flush" style="margin-top: 22px;">
+    <div class="panel__head"><div class="section-heading" style="margin:0;"><div><h2>Prediction history</h2><p>Saved scans belonging to this user.</p></div></div><span class="icon-box"><i class="fa-solid fa-file-medical"></i></span></div>
+    <div class="panel__body">
+        {% if predictions %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>Classification</th><th>Confidence</th><th>Status</th><th>Details</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for pred in predictions %}
+                    <tr>
+                        <td class="cell-muted">{{ pred['created_at'][:16] }}</td>
+                        <td class="cell-main">{{ pred['prediction'].replace('-', ' ').title() }}</td>
+                        <td>{% if pred['is_valid_image'] == 1 %}<div class="confidence"><span class="confidence__track"><span class="confidence__bar" style="width: {{ "%.4f"|format(pred['confidence'] * 100) }}%;"></span></span><small>{{ "%.4f"|format(pred['confidence'] * 100) }}%</small></div>{% else %}<span class="cell-muted">Not available</span>{% endif %}</td>
+                        <td>{% if pred['is_valid_image'] == 1 %}<span class="badge badge--valid"><i class="fa-solid fa-check"></i> Valid</span>{% else %}<span class="badge badge--invalid"><i class="fa-solid fa-xmark"></i> Invalid</span>{% endif %}</td>
+                        <td>{% if pred['is_valid_image'] == 1 %}<a class="button--secondary button--small" href="{{ url_for('analysis_details', analysis_id=pred['id']) }}"><i class="fa-solid fa-file-medical"></i> Details</a>{% else %}<span class="cell-muted">—</span>{% endif %}</td>
+                        <td><button class="button--danger button--small delete-analysis" type="button" data-analysis-id="{{ pred['id'] }}" data-filename="{{ pred['filename'] }}"><i class="fa-solid fa-trash"></i> Delete</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><span class="empty-state__icon"><i class="fa-regular fa-folder-open"></i></span><h3>No saved predictions</h3><p>This user has not completed any image analysis yet.</p></div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.querySelectorAll('.delete-analysis').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const { analysisId, filename } = button.dataset;
+            if (!window.confirm(`Delete the saved prediction and image "${filename}"? This cannot be undone.`)) return;
+            try {
+                const response = await fetch(`/delete_analysis/${analysisId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Unable to delete the saved prediction.');
+                window.location.reload();
+            } catch (error) { window.alert(error.message); }
+        });
+    });
+</script>
+{% endblock %}

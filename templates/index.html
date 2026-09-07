@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% set nav_active = 'upload' %}
+{% block title %}Analyze image · GI Vision AI{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+        {% for category, message in messages %}
+        <div class="flash flash--{{ category }}"><i class="fa-solid fa-circle-info"></i><span>{{ message }}</span></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<section class="panel analysis-hero">
+    <div class="analysis-hero__copy">
+        <p class="eyebrow"><span></span> AI-assisted image review</p>
+        <h1>Bring focus to every gastrointestinal image.</h1>
+        <p>Upload an endoscopic image to receive a structured classification, calibrated confidence estimate, and follow-up guidance.</p>
+        <div class="analysis-hero__stats" aria-label="Analysis information">
+            <div><strong>8</strong><span>Clinical classes</span></div>
+            <div><strong>16 MB</strong><span>Secure upload limit</span></div>
+            <div><strong>Private</strong><span>Saved to your history</span></div>
+        </div>
+    </div>
+
+    <form class="upload-card" method="POST" enctype="multipart/form-data" id="upload-form">
+        <input class="file-input" id="file" name="file" type="file" accept=".jpg,.jpeg,.png,.gif,.bmp,image/*" required>
+        <label class="upload-dropzone" id="dropzone" for="file">
+            <span class="upload-dropzone__icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+            <strong>Drop an image here or browse files</strong>
+            <small>JPG, PNG, GIF, or BMP · Maximum 16 MB</small>
+        </label>
+        <div class="selected-file" id="selected-file"><i class="fa-solid fa-circle-check"></i><span></span></div>
+        <div class="loading-line" id="upload-loading"><i class="fa-solid fa-spinner fa-spin"></i><span>Analyzing image securely…</span></div>
+    </form>
+</section>
+
+{% if filename %}
+<section class="stack" id="analysis-result" style="margin-top: 24px;">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow"><span></span> Analysis complete</p>
+            <h1>Clinical image result</h1>
+            <p>Review the classification and follow-up information below.</p>
+        </div>
+        <a class="button--secondary" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-clock-rotate-left"></i> View history</a>
+    </div>
+
+    <section class="panel">
+        <div class="panel__body results-grid">
+            <div class="image-card">
+                <p class="card-label"><i class="fa-regular fa-image"></i> Analyzed image</p>
+                <img class="analysis-image" src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded endoscopic image">
+            </div>
+            <div>
+                <div class="diagnosis-card">
+                    <p class="card-label"><i class="fa-solid fa-microscope"></i> Primary classification</p>
+                    <h2 class="diagnosis-name">{{ prediction.replace('-', ' ').title() }}</h2>
+                    <span class="confidence-pill"><i class="fa-solid fa-chart-line"></i> {{ confidence }} calibrated confidence</span>
+                </div>
+                {% if plot_url %}
+                <div class="chart-card">
+                    <p class="card-label"><i class="fa-solid fa-chart-bar"></i> Class probability distribution</p>
+                    <img src="data:image/png;base64,{{ plot_url }}" alt="Class probability chart">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {% if treatment_info %}
+    <section class="panel">
+        <div class="panel__head">
+            <div class="section-heading" style="margin: 0;">
+                <div>
+                    <p class="eyebrow"><span></span> Follow-up guidance</p>
+                    <h2>Treatment recommendations</h2>
+                    <p>Suggested next steps for {{ prediction.replace('-', ' ').title() }}.</p>
+                </div>
+            </div>
+            <span class="icon-box"><i class="fa-solid fa-notes-medical"></i></span>
+        </div>
+        <div class="panel__body">
+            <div class="treatment-grid">
+                <div class="treatment-summary">
+                    <p class="treatment-summary__type">{{ treatment_info.type }}</p>
+                    <span class="priority-pill"><i class="fa-solid fa-{{ 'triangle-exclamation' if 'high' in treatment_info.urgency.lower() else 'circle-info' if 'medium' in treatment_info.urgency.lower() else 'circle-check' }}"></i>{{ treatment_info.urgency }} priority</span>
+                    <div class="treatment-summary__meta">
+                        <span><i class="fa-regular fa-calendar"></i> Follow-up: {{ treatment_info.follow_up }}</span>
+                        <span><i class="fa-solid fa-user-doctor"></i> {{ treatment_info.specialist }}</span>
+                    </div>
+                </div>
+                <div class="treatment-details">
+                    <article class="detail-card"><i class="fa-solid fa-user-doctor"></i><small>Recommended specialist</small><strong>{{ treatment_info.specialist }}</strong></article>
+                    <article class="detail-card"><i class="fa-regular fa-calendar-check"></i><small>Follow-up timeline</small><strong>{{ treatment_info.follow_up }}</strong></article>
+                    <article class="detail-card"><i class="fa-solid fa-heart-pulse"></i><small>Urgency level</small><strong>{{ treatment_info.urgency }}</strong></article>
+                </div>
+            </div>
+
+            <ul class="recommendations">
+                {% for recommendation in treatment_info.recommendations %}
+                <li>
+                    <i class="fa-solid fa-check"></i>
+                    <div>
+                        <strong>{{ recommendation.split(':', 1)[0] }}</strong>
+                        {% if ':' in recommendation %}<span>{{ recommendation.split(':', 1)[1].strip() }}</span>{% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if 'high' in treatment_info.urgency.lower() %}
+            <div class="notice notice--warning" style="margin-top: 18px;"><i class="fa-solid fa-triangle-exclamation"></i><span><strong>Prompt follow-up recommended.</strong> Please schedule an appointment with {{ treatment_info.specialist }} as soon as possible.</span></div>
+            {% elif 'medium' in treatment_info.urgency.lower() %}
+            <div class="notice notice--info" style="margin-top: 18px;"><i class="fa-solid fa-circle-info"></i><span><strong>Medical attention recommended.</strong> Please consult {{ treatment_info.specialist }} within the suggested timeframe.</span></div>
+            {% else %}
+            <div class="notice notice--success" style="margin-top: 18px;"><i class="fa-solid fa-circle-check"></i><span><strong>Continue routine care.</strong> Maintain regular screening and healthy habits as advised.</span></div>
+            {% endif %}
+            <div class="notice notice--warning" style="margin-top: 11px;"><i class="fa-solid fa-shield-heart"></i><span><strong>Clinical disclaimer:</strong> This AI result supports—not replaces—professional clinical judgment, diagnosis, or treatment planning.</span></div>
+            <div class="report-actions">
+                <button class="button" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print report</button>
+                <a class="button--quiet" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-folder-open"></i> Open history</a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+    const fileInput = document.getElementById('file');
+    const dropzone = document.getElementById('dropzone');
+    const selectedFile = document.getElementById('selected-file');
+    const form = document.getElementById('upload-form');
+    const loading = document.getElementById('upload-loading');
+
+    function selectFile(file) {
+        if (!file) return;
+        selectedFile.querySelector('span').textContent = file.name;
+        selectedFile.classList.add('is-visible');
+    }
+    fileInput.addEventListener('change', () => {
+        selectFile(fileInput.files[0]);
+        if (fileInput.files[0]) form.requestSubmit();
+    });
+    ['dragenter', 'dragover'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.add('is-dragging');
+    }));
+    ['dragleave', 'drop'].forEach((eventName) => dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('is-dragging');
+    }));
+    dropzone.addEventListener('drop', (event) => {
+        const [file] = event.dataTransfer.files;
+        if (!file) return;
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        fileInput.files = transfer.files;
+        selectFile(file);
+        form.requestSubmit();
+    });
+    form.addEventListener('submit', () => {
+        if (fileInput.files.length) loading.classList.add('is-visible');
+    });
+</script>
+{% endblock %}
